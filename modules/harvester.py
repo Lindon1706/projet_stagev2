@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from playwright.async_api import async_playwright
+from modules.utils import clean_facebook_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG_DIR = BASE_DIR / "config"
@@ -13,42 +14,6 @@ USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/120.0.0.0 Safari/537.36"
 )
-
-
-def _clean_facebook_url(url: str) -> str:
-    blacklist = ["/search/", "/watch/hashtag/", "/explore/"]
-    if any(bad in url for bad in blacklist):
-        return ""
-
-    parsed = urlparse(url)
-    path = parsed.path.rstrip("/")
-    query_params = parse_qs(parsed.query)
-
-    if path in ["/photo", "/photos", "/photo.php"]:
-        if "fbid" in query_params:
-            return f"{parsed.scheme}://{parsed.netloc}{parsed.path}?fbid={query_params['fbid'][0]}"
-        return ""
-
-    if path in ["", "/reel", "/reels", "/watch", "/hashtag"]:
-        return ""
-
-    if any(
-        k in path for k in ["/posts/", "pfbid", "/videos/", "/reel/", "/groups/"]
-    ):
-        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/")
-
-    essential_params = {}
-    for key in ["story_fbid", "fbid", "id", "v"]:
-        if key in query_params:
-            essential_params[key] = query_params[key][0]
-
-    if "story_fbid" in essential_params or "fbid" in essential_params:
-        new_query = urlencode(essential_params)
-        return urlunparse(
-            (parsed.scheme, parsed.netloc, parsed.path, "", new_query, "")
-        )
-
-    return ""
 
 
 async def harvest_instagram(hashtag: str, limit: int = 10) -> list[str]:
@@ -170,7 +135,7 @@ async def harvest_facebook(hashtag: str, limit: int = 10) -> list[str]:
                         )
                         for link in article_links:
                             if any(k in link for k in target_keywords):
-                                clean_link = _clean_facebook_url(link)
+                                clean_link = clean_facebook_url(link)
                                 if clean_link:
                                     urls.add(clean_link)
                 else:
@@ -179,7 +144,7 @@ async def harvest_facebook(hashtag: str, limit: int = 10) -> list[str]:
                     )
                     for link in links:
                         if any(k in link for k in target_keywords):
-                            clean_link = _clean_facebook_url(link)
+                            clean_link = clean_facebook_url(link)
                             if clean_link:
                                 urls.add(clean_link)
 
@@ -208,7 +173,7 @@ if __name__ == "__main__":
 
     async def _test():
         print("\n--- TEST HARVESTER FACEBOOK ---")
-        fb_links = await harvest_instagram("Tayc", limit=10)
+        fb_links = await harvest_facebook("Tayc", limit=2)
         for u in fb_links:
             print(" •", u)
 

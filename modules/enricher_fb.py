@@ -5,7 +5,7 @@ from playwright.async_api import Page, async_playwright
 
 from modules.utils import get_canonical_permalink
 from modules.storage import (
-    BASE_DATA_DIR,
+    BASE_DATA_DIR_FB,
     sanitize_folder_name,
     download_image_from_page,
     save_post_data,
@@ -139,7 +139,7 @@ async def process_facebook_photo_url(page: Page, url: str) -> str:
 
     canonical_url = await get_canonical_permalink(page)
     folder_name = sanitize_folder_name(canonical_url)
-    post_folder = BASE_DATA_DIR / folder_name
+    post_folder = BASE_DATA_DIR_FB / folder_name
     json_path = post_folder / "info_post.json"
 
     # CAS 1 : Le dossier du permalien EXISTE DÉJÀ

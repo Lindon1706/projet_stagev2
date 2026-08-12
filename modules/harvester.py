@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
     async def _test():
         print("\n--- TEST HARVESTER FACEBOOK ---")
-        fb_links = await harvest_facebook("Tayc", limit=10)
+        fb_links = await harvest_instagram("Tayc", limit=10)
         for u in fb_links:
             print(" •", u)
 

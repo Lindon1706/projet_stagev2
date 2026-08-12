@@ -6,7 +6,7 @@ Développement d'une application modulaire en **Python** basée sur **Playwright
 Le pipeline suit la logique suivante :
 1. **Sessions** : Utilisation des cookies/états de navigation sauvegardés (`state_facebook.json`, `state_instagram.json`).
 2. **Harvester (`modules/harvester.py`)** : Défilement automatique, extraction des liens de publications et nettoyage strict des URLs.
-3. **Enricher (`modules/enricher.py`)** : Visite de chaque URL, dépliage du texte ("Voir plus") et extraction du texte + lien de l'image HD.
+3. **Enricher (`../modules/enricher_fb.py`)** : Visite de chaque URL, dépliage du texte ("Voir plus") et extraction du texte + lien de l'image HD.
 4. **Orchestrateur (`main.py`)** : [En cours] Lancement du pipeline complet et export (JSON/CSV).
 
 ---

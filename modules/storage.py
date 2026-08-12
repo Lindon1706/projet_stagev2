@@ -3,7 +3,8 @@ import re
 from pathlib import Path
 from playwright.async_api import Page
 
-BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "posts_facebook"
+BASE_DATA_DIR_FB = Path(__file__).resolve().parent.parent / "data" / "posts_facebook"
+BASE_DATA_DIR_INSTA = Path(__file__).resolve().parent.parent / "data" / "posts_instagram"
 
 
 def sanitize_folder_name(canonical_url: str) -> str:

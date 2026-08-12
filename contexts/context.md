@@ -12,7 +12,7 @@ Créer un scraper robuste et modulaire en Python pour récolter et enrichir des 
 - `data/` : Reçoit les fichiers d'extraction (JSON/CSV).
 - `modules/` :
   - `../modules/harvester.py` (Playwright)
-  - `enricher.py` (Instaloader)
+  - `enricher_fb.py` (Instaloader)
 - `1_setup_sessions.py` : Script à exécuter une fois pour enregistrer les sessions de connexion.
 - `main.py` : Chef d'orchestre.
 

@@ -1,41 +1,64 @@
 import asyncio
 from pathlib import Path
-from modules.enricher import enrich_facebook_batch
 
-# URLs de test (vous pouvez remplacer ou ajouter d'autres URLs de photos Facebook)
-TEST_URLS = [
-    "https://www.facebook.com/photo/?fbid=122162437718924408",
+from modules.harvester import harvest_instagram
+from modules.enricher_insta import enrich_instagram_batch
+
+# Nom d'utilisateur Instagram configuré avec la session Instaloader
+INSTA_USERNAME = "dimi.tri6687"
+
+# URLs de test manuelles (à utiliser si tu souhaites tester sans passer par le harvester)
+MANUAL_TEST_URLS = [
+    "https://www.instagram.com/p/DbkhZJzjR2E/"
 ]
 
-STATE_PATH = Path("config/state_facebook.json")
 
-
-async def main():
+async def run_instagram_test():
     print("==================================================")
-    print("  TEST COMPLET : ENRICHISSEMENT & STOCKAGE FB")
+    print("  TEST DU PIPELINE INSTAGRAM (HARVESTER + ENRICHER)")
     print("==================================================")
 
-    if not STATE_PATH.exists():
-        print(f"❌ Session introuvable : '{STATE_PATH}'. Exécutez d'abord 1_setup_sessions.py.")
+    urls_to_process = []
+
+    # --- ÉTAPE 1 : HARVESTING (Récolte via Hashtag) ---
+    hashtag = "tayc"
+    limit = 0
+    print(f"\n🌾 1. Récolte d'URLs pour #{hashtag} (limit={limit})...")
+
+    try:
+        harvested_urls = await harvest_instagram(hashtag=hashtag, limit=limit)
+        urls_to_process.extend(harvested_urls)
+    except Exception as e:
+        print(f"  ⚠️ Erreur lors du harvesting Instagram : {e}")
+
+    # Fallback sur les URLs manuelles si le harvester ne retourne rien ou pour compléter
+    if not urls_to_process and MANUAL_TEST_URLS:
+        print("  ℹ️ Utilisation des URLs manuelles de fallback.")
+        urls_to_process = MANUAL_TEST_URLS
+
+    if not urls_to_process:
+        print("\n❌ Aucune URL trouvée à traiter. Ajoute des URLs dans MANUAL_TEST_URLS si besoin.")
         return
 
-    print(f"\n🚀 Démarrage du traitement sur {len(TEST_URLS)} URL(s)...")
+    # --- ÉTAPE 2 : ENRICHISSEMENT ---
+    print(f"\n🚀 2. Lancement de l'enrichissement sur {len(urls_to_process)} publication(s)...")
 
-    # Appel de l'enrichisseur par batch
-    permalinks = await enrich_facebook_batch(TEST_URLS, state_path=STATE_PATH)
+    # Appel synchrone d'Instaloader avec le compte connecté
+    permalinks = enrich_instagram_batch(
+        urls=urls_to_process,
+        username=INSTA_USERNAME
+    )
 
+    # --- RÉSULTATS ---
     print("\n==================================================")
-    print("  RÉSULTAT DE L'EXÉCUTION")
+    print("  RÉSULTATS DE L'EXÉCUTION INSTAGRAM")
     print("==================================================")
-    print(f"✅ Nombre d'URLs traitées : {len(permalinks)}")
-
-    unique_permalinks = set(permalinks)
-    print(f"📌 Permaliens uniques générés ({len(unique_permalinks)}) :")
-    for pl in unique_permalinks:
+    print(f"✅ Publications traitées avec succès : {len(permalinks)}/{len(urls_to_process)}")
+    for pl in permalinks:
         print(f"   • {pl}")
 
-    print("\n📁 Vérifiez le dossier 'data/posts_facebook/' pour consulter les sous-dossiers et fichiers créés !")
+    print("\n📁 Vérifie le dossier 'data/posts_instagram/' pour consulter les métadonnées et images téléchargées !")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run_instagram_test())

@@ -1,7 +1,10 @@
+import pandas as pd
 import json
 import re
 from pathlib import Path
 from playwright.async_api import Page
+from modules.utils import format_date_fr
+
 
 BASE_DATA_DIR_FB = Path(__file__).resolve().parent.parent / "data" / "posts_facebook"
 BASE_DATA_DIR_INSTA = Path(__file__).resolve().parent.parent / "data" / "posts_instagram"
@@ -73,3 +76,32 @@ def save_post_data(post_folder: Path, info_data: dict):
         json.dump(info_data, f, ensure_ascii=False, indent=2)
 
     print(f"  💾 Données enregistrées : {json_path}")
+
+def convert_to_csv(post_folder: Path, type : str):
+    liste_lignes = []
+    for files in post_folder.rglob("*.json"):
+        with open(files, "r", encoding="utf-8") as f:
+            d = json.load(f)
+
+            dt = format_date_fr(d.get("date"))
+            ligne = {
+                "url_publication": d.get("canonical_url"),
+                "author": d.get("author"),
+                "text": d.get("text"),
+                "total_photos": d.get("total_photos"),
+                "date": dt.get("date"),
+                "heure": dt.get("heure"),
+                "type": type,
+                "total_photos": d.get("total_photos"),
+            }
+            liste_lignes.append(ligne)
+        df = pd.DataFrame(liste_lignes)
+    return df
+
+def summarize_data(dossier_insta = Path("./data/posts_instagram"), dossier_facebook= Path("./data/posts_facebook"),name_file = "données"):
+    summarized_facebook_data = convert_to_csv(dossier_facebook,"posts_facebook")
+    summarized_insta_data = convert_to_csv(dossier_insta,"posts_instagram")
+    résultat = pd.concat([summarized_facebook_data,summarized_insta_data],axis=0,ignore_index=True)
+    résultat.to_csv(f"./data/Save_csv/{name_file}.csv",index=False)
+    print(f"vos données ont été condensées dans le fichier data/Save_csv/{name_file}.csv")
+    return résultat

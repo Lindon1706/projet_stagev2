@@ -38,4 +38,51 @@ Récolter des données en ligne a propos d'un artiste ou d'un évènement et les
 >>récupère les liens des publications dont sont issus les medias d'une liste
 
 >`enricher_insta.py` 
->>**
+>>**extract_shortcode(url: str) -> Optional[str]:**  
+>>extrait l'identifiant d'une publication à partir de son url
+> 
+>>**download_image(url: str, target_path: Path) -> bool:**  
+>>essaie de télécharger l'image de la publication d'url dans le dossier target path
+> 
+>>**get_instaloader_instance(
+    username: Optional[str] = None,
+    session_file: Optional[Path] = None
+) -> instaloader.Instaloader:**  
+>> Initialise une instance d'Instaloader optimisée pour la vitesse.  
+    Tente de charger une session enregistrée si un nom d'utilisateur est fourni.
+> 
+>>**process_instagram_post_url(
+    L: instaloader.Instaloader,
+    url: str
+) -> Optional[str]:**  
+>>permet de récupérer et stocker les informations d'un post
+> 
+>>**enrich_instagram_batch(
+    urls: List[str],
+    username: Optional[str] = None,
+    session_file: Optional[Path] = None
+) -> List[str]:**  
+>>permet de récupérer et sauvegarder les informations d'un lot de posts
+ 
+>`storage.py`
+>>**BASE_DATA_DIR_FB :**  
+>>dossier de stockage des données facebook  
+> 
+>>**BASE_DATA_DIR_INSTA:**  
+>>dosier de stockage des données instagram
+> 
+>>**sanitize_folder_name(canonical_url: str) -> str:**  
+>>Génère un nom de dossier à partir de l'url d'une publication
+> 
+>>**download_image_from_page(page: Page, target_filepath: Path) -> bool:**  
+>>Attend que la page se charge et télécharge l'image
+> 
+>>**save_post_data(post_folder: Path, info_data: dict):**  
+>>permet de sauvegarder les données extraites d'une publication selon l'architecture choisie
+
+>`utils.py`  
+>>**clean_facebook_url(url: str) -> str:**  
+>>filtre les urls obtenues sur facebook via playwright pour ne garder que celles dont on a besoin 
+> 
+>>**get_canonical_permalink(page) -> str:**  
+>>Cherche le lien 'Afficher la publication' sur la page photo Facebook   et retourne l'URL canonique propre.

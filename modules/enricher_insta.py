@@ -11,9 +11,6 @@ from modules.storage import BASE_DATA_DIR_INSTA, save_post_data
 def extract_shortcode(url: str) -> Optional[str]:
     """
     Extrait le shortcode Instagram à partir d'une URL de post, reel ou TV.
-    Exemples:
-      • https://www.instagram.com/p/C_abc123/                   -> C_abc123
-      • https://www.instagram.com/reel/C_abc123/?utm_source=... -> C_abc123
     """
     match = re.search(r'/(?:p|reel|reels|tv)/([^/?#&]+)', url)
     if match:

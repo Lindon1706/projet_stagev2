@@ -1,4 +1,37 @@
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+import re
+
+mois_fr = {
+    "janvier" : "01",
+    "février" : "02",
+    "mars" : "03",
+    "avril" : "04",
+    "mai" : "05",
+    "juin" : "06",
+    "juillet" : "07",
+    "août" : "08",
+    "septembre" : "09",
+    "octobre" : "10",
+    "novembre" : "11",
+    "décembre" : "12",
+}
+
+def format_date_fr(date_string : str):
+    if date_string:
+        if "à" in date_string:
+            date_part, hour = date_string.split("à",1)
+        else:
+            date_part, hour = date_string.split()
+            return {"date": date_part, "heure": hour}
+        match = re.search(r"(\d{1,2})\s+([a-zA-Zà-ÿ]+)\s+(\d{4})", date_part)
+        if match:
+            day, month, year = match.groups()
+            num_month = mois_fr.get(month.lower(),"01")
+            date_iso = f"{year}-{int(num_month):02d}-{int(day):02d}"
+        else:
+            date_iso = date_part.strip()
+        return {"date" : date_iso, "heure" : hour}
+    return { "date" : "" , "heure" : "" }
 
 
 def clean_facebook_url(url: str) -> str:
@@ -88,3 +121,4 @@ async def get_canonical_permalink(page) -> str:
                 return clean_permalink_url(href)
 
     return page.url
+

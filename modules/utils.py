@@ -35,7 +35,7 @@ def format_date_fr(date_string : str):
 
 
 def clean_facebook_url(url: str) -> str:
-    blacklist = ["/search/", "/watch/hashtag/", "/explore/"]
+    blacklist = ["/search/", "/watch/hashtag/", "/explore/","/reels"]
     if any(bad in url for bad in blacklist):
         return ""
 

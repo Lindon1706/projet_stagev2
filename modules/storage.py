@@ -98,6 +98,8 @@ def convert_to_csv(post_folder: Path, type : str):
         df = pd.DataFrame(liste_lignes)
     return df
 
+
+
 def summarize_data(dossier_insta = Path("./data/posts_instagram"), dossier_facebook= Path("./data/posts_facebook"),name_file = "données"):
     summarized_facebook_data = convert_to_csv(dossier_facebook,"posts_facebook")
     summarized_insta_data = convert_to_csv(dossier_insta,"posts_instagram")
@@ -105,3 +107,13 @@ def summarize_data(dossier_insta = Path("./data/posts_instagram"), dossier_faceb
     résultat.to_csv(f"./data/Save_csv/{name_file}.csv",index=False)
     print(f"vos données ont été condensées dans le fichier data/Save_csv/{name_file}.csv")
     return résultat
+
+
+
+def concat_account_info(file_path : str) -> pd.DataFrame:
+    df = pd.read_json(file_path, lines=True)
+    df['posts'] = df['stats'].apply(lambda x: x.get('posts') if isinstance(x, dict) else None)
+    df["followers"] = df["stats"].apply(lambda x: x.get("followers") if isinstance(x, dict) else None)
+    df["following"] = df["stats"].apply(lambda x: x.get("following") if isinstance(x, dict) else None)
+    df["num_link"] = df["externalLinks"].apply(lambda x: len(x) if isinstance(x, list) else None)
+    return df

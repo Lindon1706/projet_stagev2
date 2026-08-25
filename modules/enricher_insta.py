@@ -73,13 +73,14 @@ def get_instaloader_instance(
 
 def process_instagram_post_url(
     L: instaloader.Instaloader,
-    url: str
+    url: str,
+    INSTA_DATA_DIR = BASE_DATA_DIR_INSTA,
 ) -> Optional[str]:
     """
     Traite une URL Instagram :
     1. Extrait le shortcode unique.
     2. Récupère la publication via Instaloader.
-    3. Crée le dossier local sous BASE_DATA_DIR_INSTA / post_<shortcode>.
+    3. Crée le dossier local sous INSTA_DATA_DIR / post_<shortcode>.
     4. Télécharge les images HD (image unique ou carrousel).
     5. Sauvegarde info_post.json avec l'auteur, la date, le texte et la liste des images.
     """
@@ -90,7 +91,7 @@ def process_instagram_post_url(
 
     canonical_url = f"https://www.instagram.com/p/{shortcode}/"
     folder_name = f"post_{shortcode}"
-    post_folder = BASE_DATA_DIR_INSTA / folder_name
+    post_folder = INSTA_DATA_DIR/ folder_name
     json_path = post_folder / "info_post.json"
 
     print(f"\n🔍 [Enricher IG] Traitement de : {canonical_url}")
@@ -122,14 +123,9 @@ def process_instagram_post_url(
         post_folder.mkdir(parents=True, exist_ok=True)
         photo_files = []
 
-        for idx, img_url in enumerate(image_urls, start=1):
-            photo_filename = f"photo_{idx}.jpg"
-            target_path = post_folder / photo_filename
-            if download_image(img_url, target_path):
-                photo_files.append(photo_filename)
-                print(f"  📸 Image enregistrée : {photo_filename}")
 
-        # Enregistrement des données de la publication
+
+            # Enregistrement des données de la publication
         info_data = {
             "canonical_url": canonical_url,
             "shortcode": shortcode,
@@ -151,7 +147,9 @@ def process_instagram_post_url(
 def enrich_instagram_batch(
     urls: List[str],
     username: Optional[str] = None,
-    session_file: Optional[Path] = None
+    session_file: Optional[Path] = None,
+    INSTA_DATA_DIR: Optional[Path] = BASE_DATA_DIR_INSTA,
+
 ) -> List[str]:
     """
     Traite un lot d'URLs Instagram en réutilisant l'instance Instaloader.
@@ -160,7 +158,7 @@ def enrich_instagram_batch(
     processed_permalinks = []
 
     for url in urls:
-        permalink = process_instagram_post_url(L, url)
+        permalink = process_instagram_post_url(L, url, INSTA_DATA_DIR = INSTA_DATA_DIR)
         if permalink:
             processed_permalinks.append(permalink)
 

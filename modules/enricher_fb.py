@@ -123,7 +123,7 @@ async def extract_post_metadata(page: Page) -> dict:
 
     return metadata
 
-async def process_facebook_photo_url(page: Page, url: str) -> str:
+async def process_facebook_photo_url(page: Page, url: str, FB_DATA_DIR = BASE_DATA_DIR_FB) -> str:
     """
     Traite une URL photo Facebook :
     1. Récupère son permalien canonique.
@@ -139,7 +139,7 @@ async def process_facebook_photo_url(page: Page, url: str) -> str:
 
     canonical_url = await get_canonical_permalink(page)
     folder_name = sanitize_folder_name(canonical_url)
-    post_folder = BASE_DATA_DIR_FB / folder_name
+    post_folder = FB_DATA_DIR / folder_name
     json_path = post_folder / "info_post.json"
 
     # CAS 1 : Le dossier du permalien EXISTE DÉJÀ
@@ -208,7 +208,7 @@ async def process_facebook_photo_url(page: Page, url: str) -> str:
     return canonical_url
 
 
-async def enrich_facebook_batch(urls: list[str], state_path: Path = FB_STATE_PATH) -> list[str]:
+async def enrich_facebook_batch(urls: list[str], state_path: Path = FB_STATE_PATH, FB_DATA_DIR = BASE_DATA_DIR_FB) -> list[str]:
     """
     Traite un lot d'URLs Facebook en réutilisant la même session Playwright.
     """
@@ -230,7 +230,7 @@ async def enrich_facebook_batch(urls: list[str], state_path: Path = FB_STATE_PAT
 
         for url in urls:
             try:
-                permalink = await process_facebook_photo_url(page, url)
+                permalink = await process_facebook_photo_url(page, url, FB_DATA_DIR = FB_DATA_DIR)
                 processed_permalinks.append(permalink)
             except Exception as e:
                 print(f"  ⚠️ Erreur lors du traitement de {url} : {e}")

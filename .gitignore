@@ -1,0 +1,47 @@
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Environnements virtuels & secrets
+.env
+.env.*
+venv/
+.venv/
+env/
+ENV/
+
+# IDEs & éditeurs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Dossiers spécifiques du projet à ignorer
+data/
+config/
+contexts/
+info/
+antigravity/
+
+# Fichiers générés & données
+markets.txt
+documentation.md
+*.csv
+*.json
+*.log
+*.jpg
+*.jpeg
+*.png
+
+# Fichier gitignore
+!.gitignore

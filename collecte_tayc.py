@@ -19,9 +19,18 @@ DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 
-async def run_tayc_campaign():
+async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profile : str, insta_hashtag : str, facebook_hashtag : str, insta_profile_limit: int, facebook_profile_limit: int, insta_hashtag_limit: int, facebook_hashtag_limit: int) -> dict:
+
+    CAMPAIGN_DIR = DATA_DIR / f"{name}"
+    CAMPAIGN_DIR.mkdir(exist_ok=True)
+
+    INSTA_DATA_DIR = CAMPAIGN_DIR / "posts_instagram"
+    INSTA_DATA_DIR.mkdir(exist_ok=True)
+    FB_DATA_DIR = CAMPAIGN_DIR / "posts_facebook"
+    FB_DATA_DIR.mkdir(exist_ok=True)
+
     print("==================================================")
-    print("🚀 LANCEMENT DE LA CAMPAGNE DE COLLECTE : TAYC")
+    print(f"🚀 LANCEMENT DE LA CAMPAGNE DE COLLECTE POUR {name.upper()} ")
     print("==================================================")
 
     # ----------------------------------------------------
@@ -29,15 +38,21 @@ async def run_tayc_campaign():
     # ----------------------------------------------------
     print("\n--- 👤 ÉTAPE 1 : Récolte des Profils Officiels ---")
 
-    # 10 derniers posts Instagram Officiel
-    ig_profile_urls = await harvest_instagram_profile(
-        profile_url_or_username="tayc", limit=10
-    )
+    #derniers posts Instagram Officiel
+    ig_profile_urls = []
+    if insta_profile and insta_profile_limit:
+        print(f"récupération de {insta_profile_limit} publications depuis le compte {insta_profile}")
+        ig_profile_urls = await harvest_instagram_profile(
+            profile_url_or_username=insta_profile, limit=insta_profile_limit
+        )
 
     # 10 derniers posts Facebook Officiel
-    fb_profile_urls = await harvest_facebook_profile(
-        profile_url_or_slug="https://www.facebook.com/TaycAlone", limit=10
-    )
+    fb_profile_urls = []
+    if facebook_profile and facebook_profile_limit:
+        print(f"récupération de {facebook_profile_limit} publications depuis le compte {facebook_profile}")
+        fb_profile_urls = await harvest_facebook_profile(
+            profile_url_or_slug=facebook_profile, limit=facebook_profile_limit
+        )
 
     # ----------------------------------------------------
     # 2. RÉCOLTE DANS LES HASHTAGS & RECHERCHES (COMMUNAUTÉ)
@@ -45,14 +60,20 @@ async def run_tayc_campaign():
     print("\n--- 🔍 ÉTAPE 2 : Récolte Communauté & Tournée ---")
 
     # 30 posts Instagram via Hashtag #tayc
-    ig_hashtag_urls = await harvest_instagram(
-        hashtag="tayc", limit=30
-    )
+    ig_hashtag_urls = []
+    if insta_hashtag and insta_hashtag_limit:
+        print(f"récupération de {insta_hashtag_limit} publications depuis le hashtag {insta_hashtag}")
+        ig_hashtag_urls = await harvest_instagram(
+            hashtag=insta_hashtag, limit=insta_hashtag_limit
+        )
 
     # 30 posts Facebook via Recherche/Hashtag #tayc
-    fb_search_urls = await harvest_facebook(
-        hashtag="Tayc", limit=30
-    )
+    fb_search_urls = []
+    if facebook_hashtag and facebook_hashtag_limit:
+        print(f"récupération de {facebook_hashtag_limit} publications depuis le hashtag {facebook_hashtag}")
+        fb_search_urls = await harvest_facebook(
+            hashtag=facebook_hashtag, limit=facebook_hashtag_limit
+        )
 
     # ----------------------------------------------------
     # 3. CONSOLIDATION & DÉDOUBLONNAGE
@@ -60,10 +81,14 @@ async def run_tayc_campaign():
     print("\n--- 🧹 ÉTAPE 3 : Dédoublonnage des URLs ---")
 
     # Fusion des URLs Instagram
-    all_ig_urls = list(dict.fromkeys(ig_profile_urls + ig_hashtag_urls))
+    all_ig_urls = []
+    if ig_profile_urls or ig_hashtag_urls:
+        all_ig_urls = list(dict.fromkeys(ig_profile_urls + ig_hashtag_urls))
 
     # Fusion des URLs Facebook
-    all_fb_urls = list(dict.fromkeys(fb_profile_urls + fb_search_urls))
+    all_fb_urls = []
+    if fb_profile_urls or fb_search_urls:
+        all_fb_urls = list(dict.fromkeys(fb_profile_urls + fb_search_urls))
 
     print(f"📊 Totaux uniques retenus :")
     print(f"   ├─ Instagram : {len(all_ig_urls)} URLs")
@@ -80,12 +105,12 @@ async def run_tayc_campaign():
     if all_ig_urls:
         print(f"\n📸 Enrichissement de {len(all_ig_urls)} posts Instagram...")
         ig_data = enrich_instagram_batch(
-            urls=all_ig_urls, username="dimi.tri6687"
+            urls=all_ig_urls, username="dimi.tri6687",INSTA_DATA_DIR = INSTA_DATA_DIR
         )
 
     if all_fb_urls:
         print(f"\n📘 Enrichissement de {len(all_fb_urls)} posts Facebook...")
-        fb_data = await enrich_facebook_batch(urls=all_fb_urls)
+        fb_data = await enrich_facebook_batch(urls=all_fb_urls,FB_DATA_DIR=FB_DATA_DIR)
 
     # ----------------------------------------------------
     # 5. SAUVEGARDE FINALE
@@ -109,6 +134,11 @@ async def run_tayc_campaign():
     print(f"📁 Données sauvegardées dans : {output_path}")
     print("==================================================")
 
+hashtags = ["EastAfricanMusic"," BongoFlava", "Afrobeats", "AfricanRap"]
+profiles = ["afrimma"]
 
 if __name__ == "__main__":
-    asyncio.run(run_tayc_campaign())
+    for profile in profiles:
+        asyncio.run(
+            run_ritrieval_campaign(profile,profile,"","afrimma2026","",70,0,70,0)
+        )

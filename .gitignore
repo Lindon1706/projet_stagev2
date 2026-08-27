@@ -35,13 +35,12 @@ assistant_code/
 
 # Fichiers générés & données
 markets.txt
-documentation.md
 *.csv
 *.json
 *.log
 *.jpg
 *.jpeg
-*.png
+
 
 # Fichier gitignore
 !.gitignore

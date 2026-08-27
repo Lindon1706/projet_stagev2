@@ -19,9 +19,7 @@ def extract_shortcode(url: str) -> Optional[str]:
 
 
 def download_image(url: str, target_path: Path) -> bool:
-    """
-    Télécharge une image HD depuis une URL directe vers target_path.
-    """
+
     try:
         headers = {
             "User-Agent": (

@@ -15,7 +15,8 @@ from modules.enricher_insta import enrich_instagram_batch
 from modules.enricher_fb import enrich_facebook_batch
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = BASE_DIR / "data" /"extracted_posts"
+INSTA_DATA_DIR = DATA_DIR / "instagram"
 DATA_DIR.mkdir(exist_ok=True)
 
 
@@ -135,10 +136,10 @@ async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profil
     print("==================================================")
 
 hashtags = ["EastAfricanMusic"," BongoFlava", "Afrobeats", "AfricanRap"]
-profiles = ["afrimma"]
+profiles = ["tayc"]
 
 if __name__ == "__main__":
     for profile in profiles:
         asyncio.run(
-            run_ritrieval_campaign(profile,profile,"","afrimma2026","",70,0,70,0)
+            run_ritrieval_campaign(profile,profile,"","tayc","",10,0,10,0)
         )

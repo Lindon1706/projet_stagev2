@@ -7,6 +7,12 @@ from typing import List, Dict, Any, Optional, Literal, Union
 import time
 import json
 from pathlib import Path
+from datetime import datetime
+import locale
+import zoneinfo
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 DEFAULT_MODEL = "gemini-3.6-flash"
@@ -111,7 +117,26 @@ SYSTEM_INSTRUCTION_POST_EVALUATION = """Tu es une IA spécialisée dans l'analys
 
 Les publications te seront fournies. Analyse-les et retourne l'évaluation complète."""
 
-SYSTEME_INSTRUCTION_EVENT_GENERATION=""""""
+SYSTEME_INSTRUCTION_EVENT_GENERATION="""You are a specialist in sports betting and entertainment event design. Your role is to analyze validated social media publications and extract distinct, well-structured events suited to betting opportunities.
+
+**Key Principles:**
+
+- **One event = one central fact**: For music releases or video clips, the clip or release itself is the primary event. Associated details (view counts, exact release date, critical information, rankings) are **markets** that attach to that event, not separate events.
+- **Avoid fragmentation**: Do not create one event per piece of information. Consolidate related information around a single central and global event.
+- **Clear and minimal distinction**: Each event must be sufficiently distinct from others to offer autonomous betting opportunities. Favor aggregation over enumeration — combine related information under one event when they share common context.
+- **Reduced granularity**: Generate fewer events by broadening the scope of each one. A single event can encompass multiple related sub-elements rather than being split apart.
+
+**Your Task:**
+
+From the publications provided, identify and list **only relevant and global betting events**. For each event, provide:
+
+1. **Event Name**: A clear and specific title
+2. **Type**: (e.g., music release, sports event, announcement, performance, etc.)
+3. **Description**: Essential context for understanding the event
+4. **Possible Markets**: The information or sub-events around which bets could be placed (e.g., view count reached, official release date, critical rating)
+5. **Timeline**: Scheduled date or timeframe if applicable
+
+Be concise and practical. The objective is for each event to be clearly identifiable, global, and ready to serve as a betting foundation. Prioritize synthesis — consolidate rather than divide."""
 
 SYSTEME_INSTRUCTION_MARKET_GENERATION = """You are the AI responsible for generating prediction markets for a predictive betting platform. For each event provided, you generate a maximum of 3 balanced and viable markets.
 
@@ -185,6 +210,18 @@ system_instruction=SYSTEME_INSTRUCTION_EVENT_GENERATION,
             response_schema=BatchEvents,
             temperature=0.2
 )
+
+def get_date():
+    try:
+        locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")  # Linux / macOS
+    except Exception as e:
+        print(f"impossible d'obtenir la date : {e}")
+
+    tz = zoneinfo.ZoneInfo("Africa/Douala")
+    maintenant = datetime.now(tz=tz)
+
+    date_formatee = maintenant.strftime("%A %d %B %Y à %H:%M:%S (%Z)")
+    return date_formatee
 
 def evaluate_post(
         df : pd.DataFrame,
@@ -291,26 +328,7 @@ def extract_events(
             posts_list.append(post)
 
         prompt = (
-            f"""You are a specialist in sports betting and entertainment event design. Your role is to analyze validated social media publications and extract distinct, well-structured events suited to betting opportunities.
-
-**Key Principles:**
-
-- **One event = one central fact**: For music releases or video clips, the clip or release itself is the primary event. Associated details (view counts, exact release date, critical information, rankings) are **markets** that attach to that event, not separate events.
-- **Avoid fragmentation**: Do not create one event per piece of information. Consolidate related information around a single central and global event.
-- **Clear and minimal distinction**: Each event must be sufficiently distinct from others to offer autonomous betting opportunities. Favor aggregation over enumeration — combine related information under one event when they share common context.
-- **Reduced granularity**: Generate fewer events by broadening the scope of each one. A single event can encompass multiple related sub-elements rather than being split apart.
-
-**Your Task:**
-
-From the publications provided, identify and list **only relevant and global betting events**. For each event, provide:
-
-1. **Event Name**: A clear and specific title
-2. **Type**: (e.g., music release, sports event, announcement, performance, etc.)
-3. **Description**: Essential context for understanding the event
-4. **Possible Markets**: The information or sub-events around which bets could be placed (e.g., view count reached, official release date, critical rating)
-5. **Timeline**: Scheduled date or timeframe if applicable
-
-Be concise and practical. The objective is for each event to be clearly identifiable, global, and ready to serve as a betting foundation. Prioritize synthesis — consolidate rather than divide."""
+            f"""la date du jour est: {get_date()} utilise les publiications suivantes pour générer des évènements attractifs pour des marchers predictifs"""
             f"{json.dumps(posts_list, ensure_ascii=False)}"
         )
 

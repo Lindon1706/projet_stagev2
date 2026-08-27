@@ -1,5 +1,6 @@
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import re
+import pandas as pd
 
 mois_fr = {
     "janvier" : "01",
@@ -121,4 +122,26 @@ async def get_canonical_permalink(page) -> str:
                 return clean_permalink_url(href)
 
     return page.url
+
+def parse_stat_to_num(val):
+    if pd.isna(val) or not val:
+        return 0.0
+    val_str = str(val).lower().replace(',', '.').replace(' ', '').strip()
+    multiplier = 1.0
+
+    if 'k' in val_str:
+        multiplier = 1_000.0
+        val_str = val_str.replace('k', '')
+    elif 'm' in val_str:
+        multiplier = 1_000_000.0
+        val_str = val_str.replace('m', '')
+    elif 'b' in val_str:
+        multiplier = 1_000_000_000.0
+        val_str = val_str.replace('b', '')
+
+    try:
+        clean_num = re.sub(r'[^0-9.]', '', val_str)
+        return float(clean_num) * multiplier
+    except ValueError:
+        return 0.0
 

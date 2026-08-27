@@ -19,9 +19,11 @@ La collecte dépend de l'accès aux plateformes et peut nécessiter des sessions
 - `config/` : fichiers de session utilisés pour l'accès à Facebook et Instagram.
 - `contexts/` : éléments de contexte utilisés pour les traitements.
 - `data/` : publications collectées, images, métadonnées, profils et résultats générés.
+-`data/extracted_posts` : contient les publications extraites
+-`data/Save_csv` : contient les informations issues des traitements
 - `info/` : documentation et fichier de dépendances d'origine.
 - `modules/` : fonctions principales du projet.
-- `main.py` : exemple de traitement d'un fichier CSV par Gemini.
+- `main.py` : contient une fonction permettant d'effectuer tout le traitement IA à partir d'un dossier posts.
 - `collecte.py` : lancement d'une campagne de collecte configurée pour un profil ou un hashtag.
 - `analyse_predictions.py` : script d'analyse des résultats de prédiction.
 - `1_setup_sessions.py` : préparation de sessions navigateur avec Playwright.
@@ -31,7 +33,69 @@ La collecte dépend de l'accès aux plateformes et peut nécessiter des sessions
 
 ### 3.1. Préparation des sessions
 
-Les modules qui utilisent Playwright peuvent s'appuyer sur des sessions sauvegardées dans `config/`. Ces sessions permettent de réutiliser une authentification existante lorsque les plateformes limitent l'accès aux contenus non connectés.le script 1_setup_sessions.py permet de générer ces sessions.
+Les modules qui utilisent Playwright peuvent s'appuyer sur des sessions sauvegardées dans `config/`. Il s'agit notamment de fichiers de type `state_facebook.json` et `state_instagram.json`.
+
+Ces fichiers sont des fichiers de session Playwright (Storage State) ; ils contiennent des cookies et parfois des données de `localStorage` du navigateur. Les valeurs réelles ne doivent jamais être intégrées dans la documentation.
+
+Exemple minimal, anonymisé, de `state_facebook.json` :
+
+```json
+{
+  "cookies": [
+    {
+      "name": "sessionid",
+      "value": "string_value",
+      "domain": ".facebook.com",
+      "path": "/",
+      "expires": 1700000000.0,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.facebook.com",
+      "localStorage": [
+        {
+          "name": "example_key",
+          "value": "{\"some\":\"value\"}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Exemple minimal, anonymisé, de `state_instagram.json` :
+
+```json
+{
+  "cookies": [
+    {
+      "name": "sessionid",
+      "value": "string_value",
+      "domain": ".instagram.com",
+      "path": "/",
+      "expires": 1700000000.0,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.instagram.com",
+      "localStorage": [
+        {
+          "name": "example_key",
+          "value": "{\"user\":\"example\"}"
+        }
+      ]
+    }
+  ]
+}
+```
 
 Les fichiers de session ne doivent pas être publiés ni partagés. Ils peuvent contenir des informations permettant d'accéder aux comptes utilisés pour la collecte.
 

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from pathlib import Path
 
 # Importer les modules du projet
@@ -16,11 +17,10 @@ from modules.enricher_fb import enrich_facebook_batch
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data" /"extracted_posts"
-INSTA_DATA_DIR = DATA_DIR / "instagram"
 DATA_DIR.mkdir(exist_ok=True)
 
 
-async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profile : str, insta_hashtag : str, facebook_hashtag : str, insta_profile_limit: int, facebook_profile_limit: int, insta_hashtag_limit: int, facebook_hashtag_limit: int) -> dict:
+async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profile : str, insta_hashtag : str, facebook_hashtag : str, insta_profile_limit: int, facebook_profile_limit: int, insta_hashtag_limit: int, facebook_hashtag_limit: int) :
 
     CAMPAIGN_DIR = DATA_DIR / f"{name}"
     CAMPAIGN_DIR.mkdir(exist_ok=True)
@@ -106,7 +106,7 @@ async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profil
     if all_ig_urls:
         print(f"\n📸 Enrichissement de {len(all_ig_urls)} posts Instagram...")
         ig_data = enrich_instagram_batch(
-            urls=all_ig_urls, username="dimi.tri6687",INSTA_DATA_DIR = INSTA_DATA_DIR
+            urls=all_ig_urls, username=os.environ.get("USERNAME"),INSTA_DATA_DIR = INSTA_DATA_DIR
         )
 
     if all_fb_urls:
@@ -126,7 +126,7 @@ async def run_ritrieval_campaign(name: str, insta_profile : str, facebook_profil
         "facebook_posts": fb_data,
     }
 
-    output_path = DATA_DIR / "collecte_tayc_tournee.json"
+    output_path = INSTA_DATA_DIR / f"collecte_{name}.json"
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output_payload, f, ensure_ascii=False, indent=4)
 

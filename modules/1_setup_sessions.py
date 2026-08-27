@@ -3,7 +3,9 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 # Chemins de sauvegarde dans le dossier config/
-CONFIG_DIR = Path("config")
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_DIR = BASE_DIR / "config"
+CONFIG_DIR.mkdir(exist_ok=True,parents=True)
 IG_STATE_PATH = CONFIG_DIR / "state_instagram.json"
 FB_STATE_PATH = CONFIG_DIR / "state_facebook.json"
 

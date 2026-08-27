@@ -2,52 +2,63 @@
 
 ## 1. Présentation
 
-Ce projet a pour objectif de collecter des informations publiées en ligne au sujet d'artistes, de médias ou d'événements culturels africains, puis d'utiliser ces données pour identifier des événements et générer des marchés de prédiction.
+Ce projet collecte des publications Facebook et Instagram au sujet d'artistes, de médias et d'événements culturels africains. Les données collectées sont enrichies, consolidées, analysées par Gemini, puis utilisées pour extraire des événements et générer des marchés de prédiction avec des probabilités estimées.
 
-Le pipeline combine :
+Le pipeline comprend :
 
-1. la collecte de publications Facebook et Instagram ;
-2. l'extraction des métadonnées et des images associées ;
-3. la consolidation des données dans des fichiers CSV ;
-4. l'analyse des publications par un modèle Gemini ;
-5. la génération d'événements, de marchés et de probabilités estimées.
+1. la collecte d'URLs depuis des profils et des hashtags ;
+2. l'enrichissement des publications ;
+3. la sauvegarde des métadonnées et la consolidation en CSV ;
+4. l'évaluation des publications par Gemini ;
+5. l'extraction d'événements et la génération de marchés ;
+6. l'estimation et la normalisation des probabilités.
 
-La collecte dépend de l'accès aux plateformes et peut nécessiter des sessions authentifiées. Les fonctionnalités d'analyse par IA nécessitent également un identifiant d'accès au service Gemini.
+La collecte et l'enrichissement Facebook utilisent Playwright asynchrone. L'enrichissement Instagram utilise Instaloader. Les traitements Gemini et pandas sont exécutés de manière synchrone.
 
 ## 2. Organisation du projet
 
-- `config/` : fichiers de session utilisés pour l'accès à Facebook et Instagram.
-- `contexts/` : éléments de contexte utilisés pour les traitements.
-- `data/` : publications collectées, images, métadonnées, profils et résultats générés.
--`data/extracted_posts` : contient les publications extraites
--`data/Save_csv` : contient les informations issues des traitements
-- `info/` : documentation et fichier de dépendances d'origine.
-- `modules/` : fonctions principales du projet.
-- `main.py` : contient une fonction permettant d'effectuer tout le traitement IA à partir d'un dossier posts.
-- `collecte.py` : lancement d'une campagne de collecte configurée pour un profil ou un hashtag.
-- `analyse_predictions.py` : script d'analyse des résultats de prédiction.
-- `1_setup_sessions.py` : préparation de sessions navigateur avec Playwright.
-- `assistant_code/` : espace de travail séparé pour la documentation et les ajouts de l'assistant.
+- `config/` : fichiers de session Playwright pour Facebook et Instagram.
+- `contexts/` : contextes textuels utilisés par certains traitements.
+- `data/` : publications, profils et résultats générés.
+- `Docs/` : documentation et schéma de fonctionnement.
+- `modules/` : modules de collecte, d'enrichissement, de stockage et d'analyse.
+- `collecte.py` : lance une campagne de collecte complète.
+- `main.py` : lance le traitement IA et le calcul des probabilités sur les données collectées.
+- `requirements.txt` : dépendances Python du projet.
+- `test.ipynb` : notebook d'essais et d'exploration.
 
-## 3. Déroulement général
+## 3. Préparation
 
-### 3.1. Préparation des sessions
+Installer les dépendances :
 
-Les modules qui utilisent Playwright peuvent s'appuyer sur des sessions sauvegardées dans `config/`. Il s'agit notamment de fichiers de type `state_facebook.json` et `state_instagram.json`.
+```bash
+pip install -r requirements.txt
+playwright install
+```
 
-Ces fichiers sont des fichiers de session Playwright (Storage State) ; ils contiennent des cookies et parfois des données de `localStorage` du navigateur. Les valeurs réelles ne doivent jamais être intégrées dans la documentation.
+Créer un fichier `.env` à la racine du projet et définir la clé Gemini :
 
-Exemple minimal, anonymisé, de `state_facebook.json` :
+```env
+GEMINI_API_KEY="votre_cle_api"
+```
+
+La variable `GEMINI_MODEL` peut être définie pour choisir un modèle différent. À défaut, les modules utilisent la valeur configurée dans le code.
+
+## 4. Sessions Playwright
+
+Le module `modules/1_setup_sessions.py` permet de créer des sessions réutilisables dans `config/`. Les fichiers `state_facebook.json` et `state_instagram.json` sont des Storage States Playwright. Ils peuvent contenir des cookies et des données `localStorage` permettant d'accéder à un compte.
+
+Exemple anonymisé de structure :
 
 ```json
 {
   "cookies": [
     {
-      "name": "sessionid",
-      "value": "string_value",
-      "domain": ".facebook.com",
+      "name": "nom_du_cookie",
+      "value": "valeur_exemple",
+      "domain": ".example.com",
       "path": "/",
-      "expires": 1700000000.0,
+      "expires": 0,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -55,11 +66,11 @@ Exemple minimal, anonymisé, de `state_facebook.json` :
   ],
   "origins": [
     {
-      "origin": "https://www.facebook.com",
+      "origin": "https://www.example.com",
       "localStorage": [
         {
-          "name": "example_key",
-          "value": "{\"some\":\"value\"}"
+          "name": "cle_exemple",
+          "value": "valeur_exemple"
         }
       ]
     }
@@ -67,209 +78,71 @@ Exemple minimal, anonymisé, de `state_facebook.json` :
 }
 ```
 
-Exemple minimal, anonymisé, de `state_instagram.json` :
+Les fichiers de session ne doivent jamais être publiés, commités ou partagés. Ils doivent rester locaux et être renouvelés lorsqu'une session expire.
 
-```json
-{
-  "cookies": [
-    {
-      "name": "sessionid",
-      "value": "string_value",
-      "domain": ".instagram.com",
-      "path": "/",
-      "expires": 1700000000.0,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    }
-  ],
-  "origins": [
-    {
-      "origin": "https://www.instagram.com",
-      "localStorage": [
-        {
-          "name": "example_key",
-          "value": "{\"user\":\"example\"}"
-        }
-      ]
-    }
-  ]
-}
-```
+## 5. Collecte et enrichissement
 
-Les fichiers de session ne doivent pas être publiés ni partagés. Ils peuvent contenir des informations permettant d'accéder aux comptes utilisés pour la collecte.
+Les fonctions de `modules/harvester.py` recherchent des URLs depuis des hashtags. Les fonctions de `modules/profile_harvester.py` recherchent les publications récentes d'un profil. Ces fonctions sont asynchrones et doivent être appelées avec `await` dans une boucle asyncio.
 
-### 3.2. Récolte des URLs
+`collecte.py` orchestre les étapes suivantes :
 
-Le module `harvester.py` recherche des publications à partir de hashtags :
+1. collecte depuis les profils officiels ;
+2. collecte depuis les hashtags ;
+3. dédoublonnage des URLs ;
+4. enrichissement Instagram et Facebook ;
+5. sauvegarde des résultats dans `data/extracted_posts/`.
 
-- `harvest_instagram(hashtag, limit)` collecte des URLs Instagram ;
-- `harvest_facebook(hashtag, limit)` collecte des URLs Facebook.
+Pour Instagram, `modules/enricher_insta.py` utilise Instaloader. Pour Facebook, `modules/enricher_fb.py` utilise Playwright asynchrone. Les métadonnées sont généralement sauvegardées dans un fichier `info_post.json` par publication.
 
-Le module `profile_harvester.py` recherche les publications récentes d'un profil :
+## 6. Stockage et consolidation
 
-- `harvest_instagram_profile(profile_url_or_username, limit)` ;
-- `harvest_facebook_profile(profile_url_or_slug, limit)`.
+`modules/storage.py` fournit notamment les fonctions de sauvegarde, de conversion JSON vers CSV et de consolidation des informations de profils. `modules/recap_instagram_posts.py` regroupe les publications Instagram dans un CSV, par exemple `data/Save_csv/recap_instagram.csv`.
 
-Ces fonctions sont asynchrones et sont appelées avec `asyncio`.
+`modules/get_insta_profile_info.py` collecte les informations de profils Instagram et les écrit au format JSONL, par exemple dans `data/info_save/all_profiles.jsonl`. Ce module utilise également exclusivement Playwright asynchrone.
 
-### 3.3. Enrichissement des publications
+## 7. Traitement IA
 
-Une fois les URLs récupérées, elles sont dédoublonnées puis enrichies.
+`main.py` charge les fichiers `info_post.json` sous `data/extracted_posts/`, puis exécute :
 
-Pour Instagram, `enricher_insta.py` utilise Instaloader afin de récupérer les informations d'une publication et de télécharger les images disponibles. Les données sont sauvegardées dans un fichier `info_post.json`.
+1. `evaluate_post(...)` pour marquer les publications pertinentes ;
+2. `extract_events(...)` pour extraire les événements ;
+3. `generate_markets(...)` pour générer jusqu'à trois marchés par événement ;
+4. `process_events_and_add_probabilities(...)` pour calculer les probabilités.
 
-Pour Facebook, `enricher_fb.py` utilise Playwright afin d'ouvrir les pages, d'identifier le lien canonique de la publication, d'extraire les métadonnées et de télécharger les images.
+Les sorties principales sont enregistrées dans `data/Save_csv/`. Les réponses structurées sont validées avec Pydantic avant leur sauvegarde.
 
-Par soucis de performance la partie dédiée au téléchargement des images a été supprimée toutefois ses fonctions ont gardé leurs noms et demeurent dans le projet car elles incluent des processus annexes  nécessaires pour la suite du traitement toutefois on peut les retrouver dans leur intégralité sur le dépôt https://github.com/Lindon1706/projet_stagev2
+## 8. Calcul des probabilités
 
-Les fonctions principales sont :
+`modules/market_probability.py` calcule un indice d'influence à partir des informations de profils : abonnés, abonnements, vérification, biographie et liens externes. Il associe ensuite cet indice aux publications et le transmet au modèle Gemini avec les données de l'événement et du marché.
 
-- `enrich_instagram_batch(...)` : extrait les données d'une liste d'urls de publications instagram ;
-- `enrich_facebook_batch(...)` : extrait les données d'une liste d'urls de publications facebook ;
-- `process_instagram_post_url(...)` ;
-- `process_facebook_photo_url(...)` ;
-- `extract_post_metadata(page)`.
+Les probabilités sont converties entre pourcentages et valeurs décimales, limitées à une plage raisonnable, filtrées sur les issues attendues puis normalisées afin que leur somme soit égale à 1. En cas d'échec répété de Gemini, une distribution équiprobable est produite. Cette distribution est un fallback technique et ne constitue pas une estimation fondée sur de nouvelles données.
 
-### 3.4. Stockage des données
+## 9. Formats de sortie
 
-Le module `storage.py` centralise la sauvegarde des données :
-
-- `save_post_data(...)` écrit les métadonnées dans `info_post.json` ;
-- `download_image_from_page(...)` télécharge une image depuis une page Facebook ;
-- `convert_to_csv(...)` transforme les fichiers JSON d'un dossier en DataFrame puis en CSV ;
-- `summarize_data(...)` rassemble les données Facebook et Instagram ;
-- `concat_account_info(...)` charge les informations de profils au format JSONL.
-
-Les dossiers de sortie sont organisés par compte ou campagne, avec des sous-dossiers `posts_instagram` et `posts_facebook`.
-
-### 3.5. Consolidation des publications Instagram
-
-Le module `recap_instagram_posts.py` permet de rassembler les publications Instagram de plusieurs comptes dans un seul fichier CSV.
-
-La fonction `compile_instagram_posts_to_csv(...)` extrait notamment :
-
-- le compte auteur ;
-- l'URL canonique ;
-- la date et l'heure ;
-- le texte de la publication ;
-- le nombre de photos ;
-- les chemins des fichiers image ;
-- le dossier d'origine.
-
-Le résultat est généralement enregistré dans `data/Save_csv/recap_instagram.csv`.
-
-## 4. Campagne de collecte
-
-Le script `collecte.py` illustre une campagne complète avec la fonction `run_ritrieval_campaign(...)`.
-
-La campagne suit les étapes suivantes :
-
-1. récupération des publications récentes de profils officiels ;
-2. recherche de publications par hashtags ;
-3. fusion et dédoublonnage des URLs ;
-4. enrichissement des publications Instagram et Facebook ;
-5. sauvegarde d'un récapitulatif JSON de la campagne.
-
-Les limites de collecte sont configurables séparément pour les profils et les hashtags. Le nom de la campagne détermine le dossier de sortie dans `data/extracted_posts/`.
-
-## 5. Traitement par intelligence artificielle
-
-### 5.1. Évaluation de la pertinence
-
-La fonction `evaluate_post(...)` du module `AI_treatment.py` envoie les publications à Gemini par lots. Elle ajoute au DataFrame deux colonnes :
-
-- `pertinence` : indique si la publication peut être utile pour un marché de prédiction ;
-- `raison` : explique la décision du modèle.
-
-Le traitement est effectué par lots afin de limiter la taille des requêtes. Plusieurs tentatives sont prévues en cas d'erreur temporaire.
-
-### 5.2. Extraction des événements
-
-La fonction `extract_events(...)` analyse les publications jugées pertinentes et demande au modèle de produire des événements exploitables pour des marchés de prédiction.
-
-Chaque événement peut notamment contenir :
-
-- un nom ;
-- une catégorie ;
-- une date prévue ;
-- une description ;
-- les identifiants des publications sources.
-
-### 5.3. Génération des marchés
-
-La fonction `generate_markets(...)` transforme les événements en marchés structurés. Le contexte peut inclure le contenu des publications sources ainsi que les marchés déjà produits, afin de réduire les doublons.
-
-Le script `main.py` montre également un appel direct à Gemini à partir du fichier `data/Save_csv/recap_instagram.csv`. La réponse est enregistrée dans un fichier texte et peut aussi être sauvegardée dans un fichier JSON selon le traitement utilisé.
-
-## 6. Calcul des probabilités
-
-Le module `market_probability.py` complète les marchés avec une estimation de probabilité.
-
-### 6.1. Indice d'influence
-
-La fonction `compute_full_data(...)` associe les publications aux informations de leurs auteurs et calcule un indice d'influence à partir de :
-
-- nombre d'abonnés ;
-- nombre d'abonnements ;
-- vérification du compte ;
-- présence d'une biographie ;
-- présence de liens externes.
-
-La portée de base est calculée avec une puissance contrôlée par le paramètre `gamma` et de manière logarithmique pour empêcher les très gros compte de biaiser les résultats, puis ajustée par des multiplicateurs de sélectivité et d'autorité.
-
-### 6.2. Estimation et normalisation
-
-La fonction `generate_market_probabilities(...)` transmet à Gemini les informations de l'événement, du marché et des publications sources. Le modèle renvoie une probabilité pour chaque issue.
-
-La fonction `normalize_outcomes_probabilities(...)` :
-
-- convertit les pourcentages en valeurs comprises entre 0 et 1 ;
-- ajoute une valeur par défaut pour une issue absente ;
-- conserve uniquement les issues attendues ;
-- normalise les valeurs pour obtenir une somme égale à 1.
-
-En cas d'échec répété du service, une distribution équiprobable est utilisée comme solution de repli. Cette valeur de repli doit être considérée comme une indication technique et non comme une analyse fiable.
-
-## 7. Données produites
-
-Les principaux formats utilisés sont :
-
-- JSON : métadonnées d'une publication ou résultat d'une campagne ;
-- JSONL : informations agrégées sur les profils ;
-- CSV : publications consolidées et données prêtes à analyser ;
-- TXT ou JSON : réponses et marchés générés par le modèle.
+- JSON : métadonnées, événements et marchés.
+- JSONL : profils agrégés, une entrée par ligne.
+- CSV : publications consolidées et données préparées pour l'analyse.
+- TXT : certaines réponses ou sorties intermédiaires.
 
 Les sorties existantes se trouvent principalement dans `data/extracted_posts/`, `data/info_save/` et `data/Save_csv/`.
 
-## 8. Dépendances principales
+## 10. Limites et précautions
 
-Les bibliothèques externes utilisées sont listées dans  `requirements.txt`. Elles comprennent notamment :
+- Instagram et Facebook peuvent modifier leur interface, limiter les requêtes ou expirer les sessions.
+- Les chemins relatifs supposent généralement que les commandes sont lancées depuis la racine du projet.
+- Les données extraites peuvent être incomplètes ou mal formatées.
+- Les traitements Gemini nécessitent une clé API et dépendent de la qualité des données transmises.
+- Les probabilités produites sont des estimations de modèle, pas des vérités ni des garanties.
+- Le projet génère des marchés et des probabilités, mais ne fournit pas de système automatique de vérification des résultats ni de règlement des issues.
+- Les comptes et profils à analyser doivent être fournis dans la configuration de la campagne ; le projet ne découvre pas automatiquement des comptes à partir d'une source externe.
+- Les clés API, cookies, Storage States et données personnelles doivent rester hors du dépôt public.
 
-- Playwright pour l'automatisation des navigateurs ;
-- Instaloader pour l'accès aux publications Instagram ;
-- Pandas et NumPy pour le traitement des données ;
-- Pydantic pour la validation des réponses structurées ;
-- Google GenAI pour les traitements Gemini ;
-- Requests et BeautifulSoup pour certaines recherches web ;
-- python-dotenv pour le chargement de variables d'environnement ;
-- DDGS pour la recherche sur le web.
+## 11. Vérification locale
 
-## 9. Limites 
+Une vérification syntaxique peut être lancée avec :
 
-- Les plateformes sociales peuvent modifier leur interface ou limiter les requêtes automatisées.
-- La collecte peut nécessiter une session authentifiée et dépend de la validité des fichiers de session.
-- Les données extraites des publications peuvent être incomplètes ou mal formatées.
-- Les résultats de Gemini dépendent de la qualité du texte collecté et du modèle utilisé.
-- Une probabilité générée par le modèle dépend de l'influence des auteurs et pas d'un critère plus objectif.
-- Les clés d'accès, cookies et fichiers de session peuvent être personnels et ne sont évidement pas fournis.
-- Les chemins relatifs utilisés par plusieurs scripts supposent que les commandes sont lancées depuis la racine du projet.
--Les modules d'extraction ont besoin qu'on leur fournisse de vrais comptes à analyser et sont incapables d'obtenir des comptes par d'autres moyens
+```bash
+python -m compileall main.py collecte.py modules
+```
 
-## 10. État actuel
-
-Le projet fournit les briques principales d'un pipeline de collecte et d'analyse. La collecte Facebook et Instagram, la sauvegarde des publications, la consolidation CSV, l'extraction d'événements et l'estimation de probabilités sont implémentées dans le respect de l'architecture hexagonale.
-
-Il ne fournit pas de système de vérificatio des issues et est seulement capable de générer des marchers et des probabilités
-
-
+Cette commande vérifie la syntaxe Python, mais ne remplace pas un test réel de collecte, d'authentification ou d'appel Gemini.

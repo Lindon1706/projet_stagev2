@@ -22,7 +22,7 @@ Le pipeline combine :
 - `modules/` : fonctions principales du projet.
 - `main.py` : fichier principal permettant à la racine du projet.
 - `collecte.py` : lancement d'une campagne de collecte configurée pour un profil ou un hashtag.
-- `1_setup_sessions.py` : préparation de sessions navigateur avec Playwright.
+- `modules/1_setup_sessions.py` : préparation de sessions navigateur avec Playwright.
 
 
 Plus d'informations dans `Docs/documentation.md`

@@ -14,8 +14,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-DEFAULT_MODEL = "gemini-3.6-flash"
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 DELAY_SECONDS = 5
 
@@ -529,6 +530,7 @@ def process_csv(
                 json.dump(export_data, f, ensure_ascii=False, indent=2)
 
             print(f"fichier généré à {out_json.resolve()}")
+    return export_data
 
 def test():
     """df = pd.read_csv("exemple_appreciation.csv")
@@ -548,11 +550,11 @@ def test():
     with open("out_json.json", "w", encoding="utf-8") as f:
         json.dump(export_data, f, ensure_ascii=False, indent=2)"""
     process_csv(
-        input_csv = "/home/dimitri/PycharmProjects/projet_stage_v2/data/Save_csv/recap_instagram.csv",
-        output_csv = "/home/dimitri/PycharmProjects/projet_stage_v2/data/Save_csv/test_dir/test_ouput.csv",
-        output_json = "/home/dimitri/PycharmProjects/projet_stage_v2/data/Save_csv/test_dir/test_ouput.json",
+        input_csv = BASE_DIR / "data" / "Save_csv" / "recap_instagram.csv",
+        output_csv = BASE_DIR / "data" / "Save_csv" / "test_dir" / "test_ouput.csv",
+        output_json = BASE_DIR / "data" / "Save_csv" / "test_dir" / "test_ouput.json",
         max_posts=20,
     )
 
-
-test()
+if __name__ == "__main__":
+    test()

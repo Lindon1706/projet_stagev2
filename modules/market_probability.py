@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-DEFAULT_MODEL = "gemini-3.6-flash"
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 DELAY_SECONDS = 3
 
 class OutcomeProbability(BaseModel):
@@ -326,17 +326,14 @@ Donne pour chaque issue une justification concise (reasoning), ainsi qu'une synt
     # Fallback si échec après toutes les tentatives
     print(f"  ❌ Échec d'estimation LLM pour '{mkt_name}', application d'une distribution équiprobable.")
     fallback_probs = {k: round(1.0 / len(expected_outcomes), 3) for k in expected_outcomes}
-    fallback_explanations = {k: "Distribution uniforme par défaut (indisponibilité du service)." for k in expected_outcomes}
     return FullMarket(
         mkt_name=mkt_name,
         mkt_question=mkt_question,
         mkt_solvability=mkt_solvability,
         mkt_type=mkt_type,
         mkt_outcomes=fallback_probs,
-        outcome_explanations=fallback_explanations,
         mkt_closing_date=mkt_closing_date,
         mkt_rating=mkt_rating,
-        rationale="Estimation automatique par défaut (distribution équiprobable suite à indisponibilité du service)."
     )
 
 

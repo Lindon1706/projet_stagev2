@@ -77,37 +77,6 @@ def save_post_data(post_folder: Path, info_data: dict):
 
     print(f"  💾 Données enregistrées : {json_path}")
 
-def convert_to_csv(post_folder: Path, type : str):
-    liste_lignes = []
-    for files in post_folder.rglob("*.json"):
-        with open(files, "r", encoding="utf-8") as f:
-            d = json.load(f)
-
-            dt = format_date_fr(d.get("date"))
-            ligne = {
-                "url_publication": d.get("canonical_url"),
-                "author": d.get("author"),
-                "text": d.get("text"),
-                "total_photos": d.get("total_photos"),
-                "date": dt.get("date"),
-                "heure": dt.get("heure"),
-                "type": type,
-                "total_photos": d.get("total_photos"),
-            }
-            liste_lignes.append(ligne)
-        df = pd.DataFrame(liste_lignes)
-    return df
-
-
-
-def summarize_data(dossier_insta = Path("./data/posts_instagram"), dossier_facebook= Path("./data/posts_facebook"),name_file = "données"):
-    summarized_facebook_data = convert_to_csv(dossier_facebook,"posts_facebook")
-    summarized_insta_data = convert_to_csv(dossier_insta,"posts_instagram")
-    résultat = pd.concat([summarized_facebook_data,summarized_insta_data],axis=0,ignore_index=True)
-    résultat.to_csv(f"./data/Save_csv/{name_file}.csv",index=False)
-    print(f"vos données ont été condensées dans le fichier data/Save_csv/{name_file}.csv")
-    return résultat
-
 
 
 def concat_account_info(file_path : str) -> pd.DataFrame:
